@@ -16,6 +16,7 @@ LOGFILE = 'rrsync.log' # NOTE: the file must exist for a line to be appended!
 DEVICE = '/dev/sda'
 DEVICE_MAPPED_NAME = 'cryptbackup'
 MOUNT_POINT = '/mnt/backup'
+KEEP_SNAPSHOTS = 21
 
 # The following options are mainly the options that a client rsync can send
 # to the server, and usually just in the one option format that the stock
@@ -133,7 +134,7 @@ long_opts = {
 
 ### END of options data produced by the cull-options script. ###
 
-import os, sys, re, argparse, glob, socket, time, subprocess
+import os, sys, re, argparse, glob, socket, time, subprocess, datetime
 from argparse import RawTextHelpFormatter
 
 try:
@@ -194,17 +195,19 @@ def main():
             elif command_parts[2] == 'receive':
                 snapshotReceive(MOUNT_POINT, command_parts[1], command_parts[3])
                 removeSnapshotsBtrfs(MOUNT_POINT, command_parts[1])
+            else:
+                die("Unknown command")
         except IndexError:
-            die("Not enough parametrs for btrfs command")
+            die("Not enough parameters for btrfs command")
 
     else:
-        die(f'Not supported command: {command_full}')
+        die(f'Incorrect command')
 
 def removeSnapshotsBtrfs(device, hostname):
     subvolumes = os.listdir(f'{device}/{hostname}')
     for subv in subvolumes:
         files =  os.listdir(f'{device}/{hostname}/{subv}')
-        files_to_remove = files[0:-21]
+        files_to_remove = files[0:-KEEP_SNAPSHOTS]
         for f in files_to_remove:
             command = f'btrfs subvolume delete {device}/{hostname}/{subv}/{f}'
             child = subprocess.run(command.split(' '))
@@ -234,7 +237,7 @@ def removeSnapshots(device, hostname):
     subvolumes = ['root', 'home']
     for subvolume in subvolumes:
         files = os.listdir(f'{device}/snapshots/{hostname}/{subvolume}')
-        files_to_remove = files[0:-21]
+        files_to_remove = files[0:-KEEP_SNAPSHOTS]
         for file in files_to_remove:
             command = f'btrfs subvolume delete {device}/snapshots/{hostname}/{subvolume}/{file}'
             child = subprocess.run(command.split(' '))
@@ -243,11 +246,7 @@ def createSnapshots(device, hostname):
     if not isMounted(device):
         die('Unable to create snapshots, backup drive is not mounted')
 
-    # Getting date with UNIX date command to keep backwards compatibility
-    date_cmd =  'date --iso-8601'
-    date = subprocess.run(date_cmd.split(' '), capture_output=True)
-    date = date.stdout.decode('ascii').strip()
-
+    date = datetime.date.today().isoformat
     snapshots_root = f'{device}/snapshots/{hostname}'
     if os.path.exists(f'{snapshots_root}/root/{date}'):
         print("A snapshot already exists for today")
@@ -569,4 +568,3 @@ if __name__ == '__main__':
         lock_or_die(args.dir)
     main()
 
-# vim: sw=4 et
