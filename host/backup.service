@@ -4,4 +4,4 @@ Description=Remote backup to encrypted device
 [Service]
 Type=simple
 User=root
-ExecStart=/usr/bin/backup.sh
+ExecStart=/urs/bin/systemd-cat -p 6 --stderr-priority=3 /usr/bin/backup.sh
