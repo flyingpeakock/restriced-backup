@@ -200,6 +200,18 @@ def main():
         except IndexError:
             die("Not enough parameters for btrfs command")
 
+    elif command == 'update':
+        try:
+            gitdir = command_parts[1]
+        except IndexError:
+            gitdir = "./restricted-backup"
+
+        if not os.path.isdir(gitdir + '/.git'):
+            die("Not a git repository, unable to run git update")
+
+        command = "git pull"
+        child = subprocess.run(command.split(' '))
+
     else:
         die(f'Incorrect command')
 
