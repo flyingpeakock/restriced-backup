@@ -5,6 +5,7 @@ Descripiton=Run daily backup to remote encrypted device
 OnCalender=daily
 RandomizedDelaySec=7200
 Persistent=true
+Unit=backup.service
 
 [Install]
 WantedBy=basic.target
