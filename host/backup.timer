@@ -1,0 +1,10 @@
+[Unit]
+Descripiton=Run daily backup to remote encrypted device
+
+[Timer]
+OnCalender=daily
+RandomizedDelaySec=7200
+Persistent=true
+
+[Install]
+WantedBy=basic.target

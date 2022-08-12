@@ -1,0 +1,7 @@
+[Unit]
+Description=Remote backup to encrypted device
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/backup.sh
