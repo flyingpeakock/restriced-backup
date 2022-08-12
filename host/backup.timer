@@ -1,8 +1,8 @@
 [Unit]
-Descripiton=Run daily backup to remote encrypted device
+Description=Run daily backup to remote encrypted device
 
 [Timer]
-OnCalender=daily
+OnCalendar=daily
 RandomizedDelaySec=7200
 Persistent=true
 Unit=backup.service
