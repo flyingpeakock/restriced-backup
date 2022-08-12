@@ -210,7 +210,7 @@ def main():
             die("Not a git repository, unable to run git update")
 
         command = "git pull"
-        child = subprocess.run(command.split(' '))
+        child = subprocess.run(command.split(' '), cwd=gitdir)
 
     else:
         die(f'Incorrect command')
