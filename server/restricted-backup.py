@@ -211,6 +211,8 @@ def main():
 
         command = "git pull"
         child = subprocess.run(command.split(' '), cwd=gitdir)
+        if child.returncode != 0:
+            die("Unable to run git pull")
 
     else:
         die(f'Incorrect command')
