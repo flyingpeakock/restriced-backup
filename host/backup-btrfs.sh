@@ -1,4 +1,4 @@
-#! /bin/zsh
+#!/bin/zsh
 
 remote=heimdall.asgard
 user=remote-backup
