@@ -279,6 +279,9 @@ def createSnapshots(device, hostname):
     return 0
 
 def close(device):
+    if not isOpen(f'/dev/mapper/{device}'):
+        print('Backup drive is already encrypted')
+        return 0
     command = f'cryptsetup close /dev/mapper/{device}'
     child = subprocess.run(command.split(' '))
     if isOpen(f'/dev/mapper/{device}'):
@@ -288,6 +291,9 @@ def close(device):
     return 0
 
 def unmount(device, mapped):
+    if not isMounted(device):
+        print("Backup drive is already unmounted")
+        return 0
     command = f'umount {device}'
     child = subprocess.run(command.split(' '))
     if isMounted(device):
@@ -301,7 +307,7 @@ def removeLock(name, device):
     try:
         os.remove(f"{dir}/{name}-{device}.lock")
     except FileNotFoundError:
-        print('Lock file not found, something went wrong.')
+        print('Lock file not found, something went wrong. Continuing...')
 
 def hasLock(name, device):
     dir = os.path.dirname(os.path.realpath(__file__))
