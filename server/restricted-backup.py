@@ -258,7 +258,7 @@ def createSnapshots(device, hostname):
     if not isMounted(device):
         die('Unable to create snapshots, backup drive is not mounted')
 
-    date = datetime.date.today().isoformat
+    date = datetime.date.today().isoformat()
     snapshots_root = f'{device}/snapshots/{hostname}'
     if os.path.exists(f'{snapshots_root}/root/{date}'):
         print("A snapshot already exists for today")
