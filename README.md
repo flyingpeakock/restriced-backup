@@ -18,7 +18,7 @@ All commands are run the from the host machine and ssh is used to interact with 
 ## Setup
 
 ### On backup drive
-The backup drive must be formated with btrfs filesystem. The layout of the subvolumes is unimportant however once mounted everything should have the structure `/mnt/backup/$HOSTNAME/`. You must then create a directory/subvolume for every host that will backup to this drive in the root of the drive as well as a snapshots directory/subvolume to store snapshots created from rsync backups.
+The backup drive must be formated with btrfs filesystem. The layout of the subvolumes is unimportant however once mounted all the hostnames of the devices you wish to backup should be present on the root of the backup device. You must therefore create a subvolume for every host that will backup to this drive in the root of the drive as well as a snapshots subvolume to store snapshots created from rsync backups. The snapshots directory can be omitted if only btrfs snapshots are sent and rsync is never used.
 
 The directory structure will be different for devices backed up with rsync or with btrfs. Both can be used in conjunction.
 
