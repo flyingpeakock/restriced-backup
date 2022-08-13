@@ -227,12 +227,10 @@ def removeSnapshotsBtrfs(device, hostname):
             child = subprocess.run(command.split(' '))
 
 def snapshotReceive(device, hostname, subvolume):
-    print("here")
     if not isMounted(device):
         die('Unable to recieve snapshot, backup drive is not mounted')
     command = f'btrfs receive {device}/{hostname}/{subvolume}'
-    child =  subprocess.run(command.split(' '), capture_output=True)
-    print(child.stderr)
+    child =  subprocess.run(command.split(' '))
     if child.returncode != 0:
         return child.returncode
     return 0
@@ -273,6 +271,7 @@ def createSnapshots(device, hostname):
     results = []
     for snapshot in snapshots:
         command = f'btrfs subvolume snapshot -r {snapshot[0]} {snapshot[1]}'
+        print(f'btrfs command = {command}')
         child = subprocess.run(command.split(' '))
         results.append(child.returncode)
     for res in results:
