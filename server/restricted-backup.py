@@ -179,6 +179,8 @@ def main():
             die("Backup drive is not mounted")
 
     elif command == 'snapshot':
+        if args.ro:
+            die("This device is readonly. Unable to create snapshot")
         if len(command_parts) != 2:
             die("No hostname supplied, unable to determine files to snapshot")
         createSnapshots(args.dir, command_parts[1])
@@ -190,6 +192,8 @@ def main():
                 snapshotParent(args.dir, command_parts[1])
                 return
             elif command_parts[2] == 'receive':
+                if args.ro:
+                    die("This device is readonly. Unable to receive subvolume")
                 snapshotReceive(args.dir, command_parts[1], command_parts[3])
                 removeSnapshotsBtrfs(args.dir, command_parts[1])
             else:
