@@ -271,7 +271,6 @@ def createSnapshots(device, hostname):
     results = []
     for snapshot in snapshots:
         command = f'btrfs subvolume snapshot -r {snapshot[0]} {snapshot[1]}'
-        print(f'btrfs command = {command}')
         child = subprocess.run(command.split(' '))
         results.append(child.returncode)
     for res in results:
