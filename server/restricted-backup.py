@@ -13,10 +13,6 @@
 # short & long options if you want to disable any options that rsync accepts.
 RSYNC = '/usr/bin/rsync'
 LOGFILE = 'rrsync.log' # NOTE: the file must exist for a line to be appended!
-DEVICE = '/dev/sda'
-DEVICE_MAPPED_NAME = 'cryptbackup'
-MOUNT_POINT = '/mnt/backup'
-KEEP_SNAPSHOTS = 21
 
 # The following options are mainly the options that a client rsync can send
 # to the server, and usually just in the one option format that the stock
@@ -134,6 +130,7 @@ long_opts = {
 
 ### END of options data produced by the cull-options script. ###
 
+from ast import Store
 import os, sys, re, argparse, glob, socket, time, subprocess, datetime
 from argparse import RawTextHelpFormatter
 
@@ -158,25 +155,25 @@ def main():
         if len(command_parts) != 2:
             die("No hostname supplied, unable to open backup drive")
 
-        decrypt(DEVICE, DEVICE_MAPPED_NAME)
-        mount(DEVICE_MAPPED_NAME, MOUNT_POINT)
-        lock(command_parts[1], DEVICE_MAPPED_NAME)
+        decrypt(args.drive, args.mapped)
+        mount(args.mapped, args.dir)
+        lock(command_parts[1], args.mapped)
         print('Backup drive successfully decrypted and mounted')
 
     elif command == 'close':
         if len(command_parts) != 2:
             die("No hostname supplied, unable to close backup drive")
-        removeLock(command_parts[1], DEVICE_MAPPED_NAME)
-        if hasLock(command_parts[1], DEVICE_MAPPED_NAME):
+        removeLock(command_parts[1], args.mapped)
+        if hasLock(command_parts[1], args.mapped):
             print("Device is currently in use, not closing")
             return
         
-        unmount(MOUNT_POINT, DEVICE_MAPPED_NAME)
-        close(DEVICE_MAPPED_NAME)
+        unmount(args.dir, args.mapped)
+        close(args.mapped)
         print("Backup drive successfully unmounted and encrypted")
 
     elif command == 'rsync':
-        if isMounted(MOUNT_POINT):
+        if isMounted(args.dir):
             rrsync()
         else:
             die("Backup drive is not mounted")
@@ -184,17 +181,17 @@ def main():
     elif command == 'snapshot':
         if len(command_parts) != 2:
             die("No hostname supplied, unable to determine files to snapshot")
-        createSnapshots(MOUNT_POINT, command_parts[1])
-        removeSnapshots(MOUNT_POINT, command_parts[1])
+        createSnapshots(args.dir, command_parts[1])
+        removeSnapshots(args.dir, command_parts[1])
 
     elif command == 'btrfs':
         try:
             if command_parts[2] == 'parent':
-                snapshotParent(MOUNT_POINT, command_parts[1])
+                snapshotParent(args.dir, command_parts[1])
                 return
             elif command_parts[2] == 'receive':
-                snapshotReceive(MOUNT_POINT, command_parts[1], command_parts[3])
-                removeSnapshotsBtrfs(MOUNT_POINT, command_parts[1])
+                snapshotReceive(args.dir, command_parts[1], command_parts[3])
+                removeSnapshotsBtrfs(args.dir, command_parts[1])
             else:
                 die("Unknown command")
         except IndexError:
@@ -221,7 +218,7 @@ def removeSnapshotsBtrfs(device, hostname):
     subvolumes = os.listdir(f'{device}/{hostname}')
     for subv in subvolumes:
         files =  os.listdir(f'{device}/{hostname}/{subv}')
-        files_to_remove = files[0:-KEEP_SNAPSHOTS]
+        files_to_remove = files[0:-args.snapshots]
         for f in files_to_remove:
             command = f'btrfs subvolume delete {device}/{hostname}/{subv}/{f}'
             child = subprocess.run(command.split(' '))
@@ -249,7 +246,7 @@ def removeSnapshots(device, hostname):
     subvolumes = ['root', 'home']
     for subvolume in subvolumes:
         files = os.listdir(f'{device}/snapshots/{hostname}/{subvolume}')
-        files_to_remove = files[0:-KEEP_SNAPSHOTS]
+        files_to_remove = files[0:-args.snapshots]
         for file in files_to_remove:
             command = f'btrfs subvolume delete {device}/snapshots/{hostname}/{subvolume}/{file}'
             child = subprocess.run(command.split(' '))
@@ -487,13 +484,8 @@ def rrsync():
         log_fh.close()
 
     # NOTE: This assumes that the rsync protocol will not be maliciously hijacked.
-    if args.no_lock:
-        os.execlp(RSYNC, *cmd)
-        die("execlp(", RSYNC, *cmd, ')  failed')
-    child = subprocess.run(cmd)
-    if child.returncode != 0:
-        sys.exit(child.returncode)
-
+    os.execlp(RSYNC, *cmd)
+    die("execlp(", RSYNC, *cmd, ')  failed')
 
 def validated_arg(opt, arg, typ=3, wild=False):
     if opt != 'arg': # arg values already have their backslashes removed.
@@ -541,17 +533,6 @@ def validated_arg(opt, arg, typ=3, wild=False):
 
     return ret if wild else ret[0]
 
-
-def lock_or_die(dirname):
-    import fcntl
-    global lock_handle
-    lock_handle = os.open(dirname, os.O_RDONLY)
-    try:
-        fcntl.flock(lock_handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except:
-        die('Another instance of rrsync is already accessing this directory.')
-
-
 def die(*msg):
     print(sys.argv[0], 'error:', *msg, file=sys.stderr)
     if sys.stdin.isatty():
@@ -566,14 +547,16 @@ class OurArgParser(argparse.ArgumentParser):
 
 
 if __name__ == '__main__':
-    our_desc = """Use "man rrsync" to learn how to restrict ssh users to using a restricted rsync command."""
+    our_desc = """Restrict ssh to only allow btrfs snapshots or rsync backups to a specific encrypted device."""
     arg_parser = OurArgParser(description=our_desc, add_help=False)
     only_group = arg_parser.add_mutually_exclusive_group()
     only_group.add_argument('-ro', action='store_true', help="Allow only reading from the DIR. Implies -no-del and -no-lock.")
     only_group.add_argument('-wo', action='store_true', help="Allow only writing to the DIR.")
     arg_parser.add_argument('-munge', action='store_true', help="Enable rsync's --munge-links on the server side.")
     arg_parser.add_argument('-no-del', action='store_true', help="Disable rsync's --delete* and --remove* options.")
-    arg_parser.add_argument('-no-lock', action='store_true', help="Avoid the single-run (per-user) lock check.")
+    arg_parser.add_argument('-drive', action='store', required=True, help="Backup drive device. Eg. /dev/sda1")
+    arg_parser.add_argument('-snapshots', action='store', required=True, type=int, help="Number of snapshots to store")
+    arg_parser.add_argument('-mapped', action='store', default='restricted-backup')
     arg_parser.add_argument('-help', '-h', action='help', help="Output this help message and exit.")
     arg_parser.add_argument('dir', metavar='DIR', help="The restricted directory to use.")
     args = arg_parser.parse_args()
@@ -582,7 +565,5 @@ if __name__ == '__main__':
     args.dir_slash_len = len(args.dir_slash)
     if args.ro:
         args.no_del = True
-    elif not args.no_lock:
-        lock_or_die(args.dir)
     main()
 
