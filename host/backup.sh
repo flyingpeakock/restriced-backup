@@ -16,6 +16,7 @@ while getopts ':k:r:u:s:n:' OPTION; do
             ;;
         n)
             snapshotlim="$OPTARG"
+            ;;
         ?)
             echo "Usage: $(basename $0) [-k keyfile] [-r remote] [-u user] [-s snapshot directory] [-n number of snapshots to keep]"
             echo "-s and -n only necessary if local machine uses btrfs snapshots for backups"
