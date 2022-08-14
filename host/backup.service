@@ -4,4 +4,4 @@ Description=Remote backup to encrypted device
 [Service]
 Type=simple
 User=root
-ExecStart=/usr/bin/systemd-cat -p 6 --stderr-priority=3 /usr/bin/backup.sh
+ExecStart=/usr/bin/systemd-cat -p 6 --stderr-priority=3 /usr/bin/backup.sh -k /etc/backup.key -r heimdall.asgard -u remote-backup -s /.snapshots -n 21

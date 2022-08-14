@@ -1,10 +1,11 @@
 #!/bin/zsh
 
-remote=heimdall.asgard
-user=remote-backup
+keyfile="$1"
+remote="$2"
+user="$3"
+snapshots="$4"
+snapshotlim=$(expr "$5"+1)
 date=$(date --iso-8601)
-snapshots=/.snapshots
-backup_drive=/dev/sda
 
 # Create snapshots of root and home subvolumes
 create_snapshot() {
@@ -16,7 +17,7 @@ create_snapshot() {
 
 # Remove all but latest 21 snapshots
 remove_snapshot() {
-    OLDFILES=$(ls -r $1 | tail -n +22)
+    OLDFILES=$(ls -r $1 | tail -n "$snapshotlim")
     for file in $OLDFILES; do
         btrfs subvolume delete $1/$file
     done
@@ -36,13 +37,6 @@ send_snapshot() {
     fi
 }
 
-# Crash with message
-fail() {
-    # TODO: make sure drive is unmounted and encrypted
-    1>&2 echo $1
-    exit 1
-}
-
 create_snapshot $date / $snapshots/root
 create_snapshot $date /home $snapshots/home
 
@@ -54,7 +48,7 @@ ping -c 1 $remote > /dev/null 2>&1 || exit 0
 
 # Decrypting the drive before
 # cat /etc/backup.key | ssh $user@$remote sudo decrypt.sh
-cat /etc/backup.key | ssh $user@$remote open $HOST || fail "Unable to decrypt backup drive"
+cat $keyfile | ssh $user@$remote open $HOST
 
 send_snapshot root 
 send_snapshot home 

@@ -1,7 +1,8 @@
 #!/bin/zsh
 
-user=remote-backup
-remote=heimdall.asgard
+keyfile="$1"
+user="$2"
+remote="$3"
 
 # Decrypting the drive before
 cat /etc/backup.key | ssh $user@$remote open $HOST

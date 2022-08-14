@@ -304,19 +304,19 @@ def unmount(device, mapped):
     return 0
 
 def removeLock(name, device):
-    dir = os.path.dirname(os.path.realpath(__file__))
+    dir = os.path.realpath('/tmp')
     try:
         os.remove(f"{dir}/{name}-{device}.lock")
     except FileNotFoundError:
         print('Lock file not found, something went wrong. Continuing...')
 
 def hasLock(name, device):
-    dir = os.path.dirname(os.path.realpath(__file__))
+    dir = os.path.realpath('/tmp')
     lock_files = [f for f in os.listdir(dir) if f.endswith(f'{device}.lock') and not f.startswith(name)]
     return len(lock_files) != 0
 
 def lock(name, device):
-    dir = os.path.dirname(os.path.realpath(__file__))
+    dir = os.path.realpath('/tmp')
     file_name = f'{dir}/{name}-{device}.lock'
     fp = open(file_name, 'w')
     fp.close()
@@ -554,7 +554,7 @@ if __name__ == '__main__':
     our_desc = """Restrict ssh to only allow btrfs snapshots or rsync backups to a specific encrypted device."""
     arg_parser = OurArgParser(description=our_desc, add_help=False)
     only_group = arg_parser.add_mutually_exclusive_group()
-    only_group.add_argument('-ro', action='store_true', help="Allow only reading from the DIR. Implies -no-del and -no-lock.")
+    only_group.add_argument('-ro', action='store_true', help="Allow only reading from the DIR. Implies -no-del.")
     only_group.add_argument('-wo', action='store_true', help="Allow only writing to the DIR.")
     arg_parser.add_argument('-munge', action='store_true', help="Enable rsync's --munge-links on the server side.")
     arg_parser.add_argument('-no-del', action='store_true', help="Disable rsync's --delete* and --remove* options.")
