@@ -4,6 +4,7 @@ while getopts ':k:r:u:s:n:' OPTION; do
     case "$OPTION" in
         k)
             keyfile=$OPTARG
+            ;;
         r)
             remote="$OPTARG"
             ;;
