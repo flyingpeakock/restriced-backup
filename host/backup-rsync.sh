@@ -1,8 +1,8 @@
 #!/bin/zsh
 
 keyfile="$1"
-user="$2"
-remote="$3"
+remote="$2"
+user="$3"
 
 # Decrypting the drive before
 cat /etc/backup.key | ssh $user@$remote open $HOST
