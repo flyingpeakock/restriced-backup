@@ -7,6 +7,42 @@ snapshots="$4"
 snapshotlim=$(expr "$5"+1)
 date=$(date --iso-8601)
 
+die() {
+    >&2 echo "$*"
+    exit 1
+}
+
+append_new_line() {
+    if [ "$1" = "" ]; then
+        echo $2
+    else
+        echo $1
+        echo $2
+    fi
+}
+
+error=""
+
+if [ "$keyfile" = "" ]; then
+    error=$(append_new_line "$error" "No keyfile provided")
+fi
+if [ "$remote" = "" ]; then
+    error=$(append_new_line "$error" "No ssh target provided")
+fi
+if [ "$user" = "" ]; then
+    error=$(append_new_line "$error" "No ssh user provided")
+fi
+if [ "$snapshots" = "" ]; then
+    error=$(append_new_line "$error" "No local snapshots directory provided")
+fi
+if [ "$snapshotlim" = "" ]; then
+    error=$(append_new_line "$error" "No limits on the amount of snapshots to keep")
+fi
+
+if [ "$error" != "" ]; then
+    die $error
+fi
+
 # Create snapshots of root and home subvolumes
 create_snapshot() {
     # Only keeping one snapshot per day
