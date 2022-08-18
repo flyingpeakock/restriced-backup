@@ -5,7 +5,7 @@ remote="$2"
 user="$3"
 
 die() {
-    echo "$*"
+    >&2 echo "$*"
     exit 1
 }
 
