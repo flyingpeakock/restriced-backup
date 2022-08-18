@@ -18,8 +18,21 @@ while getopts ':k:r:u:s:n:' OPTION; do
             snapshotlim="$OPTARG"
             ;;
         ?)
-            echo "Usage: $(basename $0) [-k keyfile] [-r remote] [-u user] [-s snapshot directory] [-n number of snapshots to keep]"
-            echo "-s and -n only necessary if local machine uses btrfs snapshots for backups"
+            echo "Usage: $(basename $0) -k KEYFILE -r REMOTE -u USER -s SNAPSHOTS -u NUMBER"
+            echo
+            echo "Run a backup to a machine configured for restricted-backup.py"
+            echo
+            echo "Options:"
+            echo "  -k KEYFILE     Keyfile to unlock backup drive"
+            echo "  -r REMOTE      IP or hostname to the server"
+            echo "  -u USER        Username to connect to the server with"
+            echo "  -s SNAPSHOTS   Location of local snapshots directory"
+            echo "                 Only needed if you are running BTRFS locally"
+            echo "  -u NUMBER      Number of snapshots to keep in local directory"
+            echo "                 Only needed if you are running BTRFS locally"
+            echo
+            echo "For more information or submitting bugs:"
+            echo "https://github.com/flyingpeakock/restricted-backup"
             exit 0
             ;;
     esac
