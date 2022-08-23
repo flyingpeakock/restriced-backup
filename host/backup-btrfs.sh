@@ -54,7 +54,7 @@ create_snapshot() {
 # Remove all but latest 21 snapshots
 remove_snapshot() {
     FILES=("$1"/*)
-    OLDFILES=($FILES[0,-21])
+    OLDFILES=($FILES[0,-$snapshotlim])
     for file in $OLDFILES; do
         btrfs subvolume delete "$file"
     done
