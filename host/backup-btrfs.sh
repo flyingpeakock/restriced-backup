@@ -4,7 +4,7 @@ keyfile="$1"
 remote="$2"
 user="$3"
 snapshots="$4"
-snapshotlim=$(expr "$5"+1)
+snapshotlim=$(expr "$5" + 1)
 date=$(date --iso-8601)
 
 die() {
